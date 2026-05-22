@@ -331,16 +331,79 @@ a { text-decoration: none; }
     padding: 5rem 0;
 }
 
-.home-hero-decor { position: absolute; inset: 0; pointer-events: none; }
-
-.home-decor-circle {
+/* Dot grid */
+.home-dot-grid {
     position: absolute;
-    border-radius: 50%;
-    background: rgba(255,255,255,.06);
+    inset: 0;
+    background-image: radial-gradient(rgba(255,255,255,.12) 1px, transparent 1px);
+    background-size: 28px 28px;
+    pointer-events: none;
 }
-.home-decor-circle.c1 { width: 420px; height: 420px; top: -120px; right: -80px; }
-.home-decor-circle.c2 { width: 260px; height: 260px; bottom: -60px; left: -40px; }
-.home-decor-circle.c3 { width: 160px; height: 160px; bottom: 80px; right: 240px; background: rgba(255,255,255,.04); }
+
+/* Organic blobs */
+.home-blob {
+    position: absolute;
+    filter: blur(70px);
+    pointer-events: none;
+    will-change: transform;
+}
+.blob-1 {
+    width: 520px; height: 520px;
+    background: rgba(255,255,255,.06);
+    border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+    top: -160px; right: -100px;
+    animation: blob-morph 14s ease-in-out infinite alternate;
+}
+.blob-2 {
+    width: 380px; height: 380px;
+    background: rgba(255,80,80,.07);
+    border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
+    bottom: -60px; left: 5%;
+    animation: blob-morph 18s ease-in-out infinite alternate-reverse;
+}
+.blob-3 {
+    width: 220px; height: 220px;
+    background: rgba(255,255,255,.05);
+    border-radius: 50% 50% 30% 70% / 50% 70% 30% 50%;
+    top: 25%; left: 42%;
+    animation: blob-morph 10s ease-in-out infinite alternate;
+}
+@keyframes blob-morph {
+    0%   { transform: translate(0,0) scale(1); }
+    50%  { transform: translate(20px,15px) scale(1.04); }
+    100% { transform: translate(-10px,25px) scale(.97); }
+}
+
+/* Floating blood drops */
+.home-float-drops {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+.fdrop {
+    position: absolute;
+    color: rgba(255,255,255,.14);
+    animation: fdrop-float 7s ease-in-out infinite;
+}
+.fd-1 { font-size: 1.1rem; top: 12%; left: 6%;   animation-delay: 0s;   animation-duration: 6s; }
+.fd-2 { font-size: 1.8rem; top: 55%; left: 12%;  animation-delay: 1.8s; animation-duration: 8s; }
+.fd-3 { font-size: 2.2rem; top: 18%; right: 12%; animation-delay: 3.2s; animation-duration: 7s; }
+.fd-4 { font-size: 1.4rem; top: 68%; right: 7%;  animation-delay: 0.9s; animation-duration: 9s; }
+.fd-5 { font-size: 1rem;   top: 40%; left: 4%;   animation-delay: 4.5s; animation-duration: 6s; }
+@keyframes fdrop-float {
+    0%,100% { transform: translateY(0) rotate(-5deg);    opacity: .14; }
+    50%      { transform: translateY(-22px) rotate(8deg); opacity: .22; }
+}
+
+/* Wave divider */
+.home-hero-wave {
+    position: absolute;
+    bottom: -1px; left: 0; right: 0;
+    line-height: 0;
+    pointer-events: none;
+}
+.home-hero-wave svg { display: block; width: 100%; height: 70px; }
 
 .home-hero-badge {
     display: inline-flex;

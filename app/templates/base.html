@@ -20,11 +20,13 @@
         </button>
         <div class="collapse navbar-collapse" id="navMenu">
             <ul class="navbar-nav ms-auto align-items-lg-center gap-1">
+                {% if session.get('user_id') or session.get('admin_logged_in') %}
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('dashboard') }}">
                         <i class="bi bi-speedometer2"></i> Dashboard
                     </a>
                 </li>
+                {% endif %}
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('donors.list_donors') }}"><i class="bi bi-people-fill"></i> Donors</a>
                 </li>
@@ -37,9 +39,7 @@
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('hospitals.list_hospitals') }}"><i class="bi bi-hospital-fill"></i> Hospitals</a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('search') }}"><i class="bi bi-search"></i> Search</a>
-                </li>
+
                 <!-- User auth -->
                 {% if session.get('user_id') %}
                 <li class="nav-item ms-lg-1">
@@ -67,7 +67,7 @@
                 </li>
                 {% endif %}
 
-                <!-- Admin auth (separate) -->
+                <!-- Admin dropdown (only when logged in as admin) -->
                 {% if session.get('admin_logged_in') %}
                 <li class="nav-item ms-lg-2">
                     <div class="dropdown">
@@ -80,12 +80,6 @@
                             </a></li>
                         </ul>
                     </div>
-                </li>
-                {% else %}
-                <li class="nav-item ms-lg-1">
-                    <a class="nav-link home-admin-link" href="{{ url_for('auth.login') }}" title="Admin login">
-                        <i class="bi bi-shield-lock"></i> Admin
-                    </a>
                 </li>
                 {% endif %}
             </ul>

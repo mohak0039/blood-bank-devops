@@ -71,12 +71,6 @@
                         </ul>
                     </div>
                 </li>
-                {% else %}
-                <li class="nav-item ms-1">
-                    <a class="nav-link home-admin-link" href="{{ url_for('auth.login') }}" title="Admin login">
-                        <i class="bi bi-shield-lock"></i> Admin
-                    </a>
-                </li>
                 {% endif %}
             </ul>
         </div>
@@ -85,10 +79,25 @@
 
 <!-- Hero -->
 <section class="home-hero">
-    <div class="home-hero-decor">
-        <div class="home-decor-circle c1"></div>
-        <div class="home-decor-circle c2"></div>
-        <div class="home-decor-circle c3"></div>
+    <!-- Dot grid -->
+    <div class="home-dot-grid"></div>
+    <!-- Organic blobs -->
+    <div class="home-blob blob-1"></div>
+    <div class="home-blob blob-2"></div>
+    <div class="home-blob blob-3"></div>
+    <!-- Floating drops -->
+    <div class="home-float-drops" aria-hidden="true">
+        <span class="fdrop fd-1"><i class="bi bi-droplet-fill"></i></span>
+        <span class="fdrop fd-2"><i class="bi bi-droplet-fill"></i></span>
+        <span class="fdrop fd-3"><i class="bi bi-droplet-fill"></i></span>
+        <span class="fdrop fd-4"><i class="bi bi-droplet-half"></i></span>
+        <span class="fdrop fd-5"><i class="bi bi-droplet"></i></span>
+    </div>
+    <!-- Wave divider -->
+    <div class="home-hero-wave">
+        <svg viewBox="0 0 1440 70" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0,35 C240,70 480,0 720,35 C960,70 1200,0 1440,35 L1440,70 L0,70 Z" fill="#f0f2f5"/>
+        </svg>
     </div>
     <div class="container position-relative">
         <div class="row align-items-center home-hero-row">

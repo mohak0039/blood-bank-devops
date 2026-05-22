@@ -3,7 +3,7 @@
 
 {% block content %}
 
-{% if low_stock %}
+{% if low_stock and session.get('admin_logged_in') %}
 <div class="low-stock-banner">
     <i class="bi bi-exclamation-triangle-fill"></i>
     <div>

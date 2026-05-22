@@ -1,7 +1,7 @@
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 
 from models.db import execute_query
-from utils import login_required, donor_eligibility
+from utils import login_required, user_login_required, donor_eligibility
 
 donors_bp = Blueprint('donors', __name__)
 
@@ -25,7 +25,7 @@ def list_donors():
 
 
 @donors_bp.route('/register', methods=['GET', 'POST'])
-@login_required
+@user_login_required
 def register():
     if request.method == 'POST':
         name = request.form.get('name', '').strip()

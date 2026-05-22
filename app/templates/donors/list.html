@@ -7,9 +7,9 @@
         <h2><i class="bi bi-people-fill text-danger me-2"></i>Registered Donors</h2>
         <small class="text-muted">{{ donors|length }} donor{{ 's' if donors|length != 1 }}</small>
     </div>
-    {% if session.get('admin_logged_in') %}
+    {% if session.get('user_id') or session.get('admin_logged_in') %}
     <a href="{{ url_for('donors.register') }}" class="btn btn-bb">
-        <i class="bi bi-person-plus-fill"></i> Register Donor
+        <i class="bi bi-person-plus-fill"></i> Register as Donor
     </a>
     {% endif %}
 </div>
@@ -86,9 +86,9 @@
     <div class="card-body text-center py-5">
         <i class="bi bi-people text-muted" style="font-size:3rem"></i>
         <p class="text-muted mt-3 mb-1">No donors found.</p>
-        {% if session.get('admin_logged_in') %}
+        {% if session.get('user_id') or session.get('admin_logged_in') %}
         <a href="{{ url_for('donors.register') }}" class="btn btn-bb mt-2">
-            <i class="bi bi-person-plus-fill"></i> Register First Donor
+            <i class="bi bi-person-plus-fill"></i> Register as Donor
         </a>
         {% endif %}
     </div>
