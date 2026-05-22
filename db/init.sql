@@ -30,8 +30,17 @@ CREATE TABLE IF NOT EXISTS hospitals (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS users (
+    id            INT AUTO_INCREMENT PRIMARY KEY,
+    name          VARCHAR(100) NOT NULL,
+    email         VARCHAR(100) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS blood_requests (
     id             INT AUTO_INCREMENT PRIMARY KEY,
+    user_id        INT NULL,
     patient_name   VARCHAR(100) NOT NULL,
     blood_type     VARCHAR(5) NOT NULL,
     units_required INT NOT NULL,
