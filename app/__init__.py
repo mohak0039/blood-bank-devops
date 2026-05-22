@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, session
 
 from config import config_map
 from models.db import execute_query
@@ -10,6 +10,16 @@ def ensure_schema(app):
         return
     with app.app_context():
         try:
+            execute_query('''
+                CREATE TABLE IF NOT EXISTS users (
+                    id            INT AUTO_INCREMENT PRIMARY KEY,
+                    name          VARCHAR(100) NOT NULL,
+                    email         VARCHAR(100) NOT NULL UNIQUE,
+                    password_hash VARCHAR(255) NOT NULL,
+                    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''', fetch=False)
+
             execute_query('''
                 CREATE TABLE IF NOT EXISTS hospitals (
                     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -49,6 +59,11 @@ def ensure_schema(app):
                     'ALTER TABLE blood_requests ADD COLUMN hospital_id INT NULL',
                     fetch=False,
                 )
+            if 'user_id' not in col_names:
+                execute_query(
+                    'ALTER TABLE blood_requests ADD COLUMN user_id INT NULL',
+                    fetch=False,
+                )
         except Exception as e:
             app.logger.warning(f'Schema migration: {e}')
 
@@ -58,12 +73,14 @@ def create_app(config_name='development'):
     app.config.from_object(config_map[config_name])
 
     from routes.auth import auth_bp
+    from routes.chat import chat_bp
     from routes.donors import donors_bp
     from routes.hospitals import hospitals_bp
     from routes.inventory import inventory_bp
     from routes.requests import requests_bp
 
     app.register_blueprint(auth_bp, url_prefix='/auth')
+    app.register_blueprint(chat_bp)
     app.register_blueprint(donors_bp, url_prefix='/donors')
     app.register_blueprint(inventory_bp, url_prefix='/inventory')
     app.register_blueprint(requests_bp, url_prefix='/requests')
@@ -72,6 +89,10 @@ def create_app(config_name='development'):
     ensure_schema(app)
 
     @app.route('/')
+    def home():
+        return render_template('home.html')
+
+    @app.route('/dashboard')
     def dashboard():
         donor_count = execute_query('SELECT COUNT(*) AS cnt FROM donors')[0]['cnt']
         total_units = execute_query('SELECT COALESCE(SUM(units), 0) AS total FROM blood_inventory')[0]['total']

@@ -47,9 +47,14 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                bat "docker-compose down --remove-orphans & exit /B 0"
-                bat "docker-compose up -d"
-                bat "docker-compose ps"
+                withCredentials([string(
+                    credentialsId: 'anthropic-api-key',
+                    variable: 'ANTHROPIC_API_KEY'
+                )]) {
+                    bat "docker-compose down --remove-orphans & exit /B 0"
+                    bat "docker-compose up -d"
+                    bat "docker-compose ps"
+                }
                 echo "Application deployed on port 5000"
             }
         }

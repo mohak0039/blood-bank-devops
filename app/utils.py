@@ -5,12 +5,26 @@ from flask import current_app, flash, redirect, session, url_for
 
 
 def login_required(f):
+    """Requires admin session."""
     @wraps(f)
     def decorated(*args, **kwargs):
         if current_app.config.get('BYPASS_LOGIN'):
             return f(*args, **kwargs)
         if not session.get('admin_logged_in'):
             flash('Please log in as admin to access this page.', 'warning')
+            return redirect(url_for('auth.login'))
+        return f(*args, **kwargs)
+    return decorated
+
+
+def user_login_required(f):
+    """Requires user session OR admin session."""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if current_app.config.get('BYPASS_LOGIN'):
+            return f(*args, **kwargs)
+        if not session.get('user_id') and not session.get('admin_logged_in'):
+            flash('Please sign in to continue.', 'warning')
             return redirect(url_for('auth.login'))
         return f(*args, **kwargs)
     return decorated

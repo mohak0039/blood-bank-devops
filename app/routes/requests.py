@@ -1,9 +1,9 @@
 from datetime import datetime
 
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, flash, redirect, render_template, request, session, url_for
 
 from models.db import execute_query
-from utils import login_required
+from utils import login_required, user_login_required
 
 requests_bp = Blueprint('requests', __name__)
 
@@ -11,12 +11,20 @@ BLOOD_TYPES = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
 
 
 @requests_bp.route('/')
+@user_login_required
 def list_requests():
-    blood_requests = execute_query('SELECT * FROM blood_requests ORDER BY requested_at DESC')
+    if session.get('admin_logged_in'):
+        blood_requests = execute_query('SELECT * FROM blood_requests ORDER BY requested_at DESC')
+    else:
+        blood_requests = execute_query(
+            'SELECT * FROM blood_requests WHERE user_id = %s ORDER BY requested_at DESC',
+            (session['user_id'],),
+        )
     return render_template('requests/list.html', blood_requests=blood_requests)
 
 
 @requests_bp.route('/new', methods=['GET', 'POST'])
+@user_login_required
 def new_request():
     hospitals = execute_query('SELECT id, name FROM hospitals ORDER BY name')
 
@@ -35,10 +43,10 @@ def new_request():
 
         execute_query(
             '''INSERT INTO blood_requests
-               (patient_name, blood_type, units_required, hospital, hospital_id,
+               (user_id, patient_name, blood_type, units_required, hospital, hospital_id,
                 contact_phone, urgency)
-               VALUES (%s, %s, %s, %s, %s, %s, %s)''',
-            (patient_name, blood_type, int(units_required),
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s)''',
+            (session.get('user_id'), patient_name, blood_type, int(units_required),
              hospital or None, hospital_id, contact_phone, urgency),
             fetch=False,
         )
