@@ -54,7 +54,7 @@
                         </ul>
                     </div>
                 </li>
-                {% else %}
+                {% elif not session.get('admin_logged_in') %}
                 <li class="nav-item ms-lg-1">
                     <a class="nav-link" href="{{ url_for('auth.login') }}">
                         <i class="bi bi-box-arrow-in-right"></i> Sign In
@@ -108,99 +108,5 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 {% block scripts %}{% endblock %}
 
-<!-- ── Chat Widget ── -->
-<div id="chat-widget">
-    <div id="chat-panel" class="d-none">
-        <div id="chat-header">
-            <span><i class="bi bi-robot"></i>
-                {% if session.get('admin_logged_in') %}Admin Assistant{% else %}Blood Bank Assistant{% endif %}
-            </span>
-            <button id="chat-close" aria-label="Close"><i class="bi bi-x-lg"></i></button>
-        </div>
-        <div id="chat-messages"></div>
-        <div id="chat-input-area">
-            <input type="text" id="chat-input" placeholder="Ask a question…" autocomplete="off">
-            <button id="chat-send" aria-label="Send"><i class="bi bi-send-fill"></i></button>
-        </div>
-    </div>
-    <button id="chat-toggle" class="btn-bb" title="Chat assistant">
-        <i class="bi bi-chat-dots-fill"></i>
-    </button>
-</div>
-
-<script>
-(function () {
-    const toggle   = document.getElementById('chat-toggle');
-    const panel    = document.getElementById('chat-panel');
-    const closeBtn = document.getElementById('chat-close');
-    const input    = document.getElementById('chat-input');
-    const sendBtn  = document.getElementById('chat-send');
-    const messages = document.getElementById('chat-messages');
-
-    let opened = false;
-
-    toggle.addEventListener('click', () => {
-        panel.classList.toggle('d-none');
-        if (!opened) {
-            opened = true;
-            appendMessage(
-                {% if session.get('admin_logged_in') %}
-                "Hi! I have access to live inventory, donor, and request data. What would you like to know?"
-                {% else %}
-                "Hi! I can help with donation eligibility, blood type info, and the donation process. What's on your mind?"
-                {% endif %},
-                'bot'
-            );
-            input.focus();
-        }
-    });
-
-    closeBtn.addEventListener('click', () => panel.classList.add('d-none'));
-
-    function appendMessage(text, role) {
-        const div = document.createElement('div');
-        div.className = `chat-msg chat-msg-${role}`;
-        div.textContent = text;
-        messages.appendChild(div);
-        messages.scrollTop = messages.scrollHeight;
-    }
-
-    async function sendMessage() {
-        const text = input.value.trim();
-        if (!text) return;
-        input.value = '';
-        input.disabled = true;
-        sendBtn.disabled = true;
-        appendMessage(text, 'user');
-
-        const typing = document.createElement('div');
-        typing.className = 'chat-msg chat-msg-bot chat-typing';
-        typing.textContent = '…';
-        messages.appendChild(typing);
-        messages.scrollTop = messages.scrollHeight;
-
-        try {
-            const resp = await fetch('/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: text }),
-            });
-            const data = await resp.json();
-            typing.remove();
-            appendMessage(data.reply, 'bot');
-        } catch {
-            typing.remove();
-            appendMessage('Sorry, something went wrong. Please try again.', 'bot');
-        } finally {
-            input.disabled = false;
-            sendBtn.disabled = false;
-            input.focus();
-        }
-    }
-
-    sendBtn.addEventListener('click', sendMessage);
-    input.addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
-}());
-</script>
 </body>
 </html>

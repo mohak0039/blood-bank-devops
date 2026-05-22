@@ -43,6 +43,17 @@ def ensure_schema(app):
                 )
             ''', fetch=False)
 
+            donor_cols = execute_query('''
+                SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+                WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'donors'
+            ''')
+            donor_col_names = [c['COLUMN_NAME'] for c in donor_cols]
+            if 'status' not in donor_col_names:
+                execute_query(
+                    "ALTER TABLE donors ADD COLUMN status ENUM('pending','approved','rejected') DEFAULT 'approved'",
+                    fetch=False,
+                )
+
             cols = execute_query('''
                 SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
                 WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'blood_requests'
@@ -73,14 +84,12 @@ def create_app(config_name='development'):
     app.config.from_object(config_map[config_name])
 
     from routes.auth import auth_bp
-    from routes.chat import chat_bp
     from routes.donors import donors_bp
     from routes.hospitals import hospitals_bp
     from routes.inventory import inventory_bp
     from routes.requests import requests_bp
 
     app.register_blueprint(auth_bp, url_prefix='/auth')
-    app.register_blueprint(chat_bp)
     app.register_blueprint(donors_bp, url_prefix='/donors')
     app.register_blueprint(inventory_bp, url_prefix='/inventory')
     app.register_blueprint(requests_bp, url_prefix='/requests')

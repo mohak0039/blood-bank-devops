@@ -47,14 +47,9 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                withCredentials([string(
-                    credentialsId: 'gemini-api-key',
-                    variable: 'GEMINI_API_KEY'
-                )]) {
-                    bat "docker-compose down --remove-orphans & exit /B 0"
-                    bat "docker-compose up -d"
-                    bat "docker-compose ps"
-                }
+                bat "docker-compose down --remove-orphans & exit /B 0"
+                bat "docker-compose up -d"
+                bat "docker-compose ps"
                 echo "Application deployed on port 5000"
             }
         }

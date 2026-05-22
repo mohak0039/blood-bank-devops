@@ -37,7 +37,6 @@ services:
       SECRET_KEY: change-me-in-production
       ADMIN_USERNAME: admin
       ADMIN_PASSWORD: bloodbank123
-      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     depends_on:
       db:
         condition: service_healthy

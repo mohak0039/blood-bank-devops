@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS donors (
     email        VARCHAR(100),
     city         VARCHAR(50),
     last_donated DATE,
+    status       ENUM('pending','approved','rejected') DEFAULT 'approved',
     created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
