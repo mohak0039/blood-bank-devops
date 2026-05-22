@@ -13,12 +13,13 @@ BLOOD_TYPES = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
 @requests_bp.route('/')
 @user_login_required
 def list_requests():
-    if session.get('admin_logged_in'):
+    user_id = session.get('user_id')
+    if session.get('admin_logged_in') or not user_id:
         blood_requests = execute_query('SELECT * FROM blood_requests ORDER BY requested_at DESC')
     else:
         blood_requests = execute_query(
             'SELECT * FROM blood_requests WHERE user_id = %s ORDER BY requested_at DESC',
-            (session['user_id'],),
+            (user_id,),
         )
     return render_template('requests/list.html', blood_requests=blood_requests)
 
