@@ -1,6 +1,6 @@
 import os
 
-import anthropic
+import google.generativeai as genai
 from flask import Blueprint, jsonify, request, session
 
 from models.db import execute_query
@@ -15,7 +15,7 @@ def chat():
     if not message:
         return jsonify({'reply': 'Please enter a message.'}), 400
 
-    api_key = os.environ.get('ANTHROPIC_API_KEY')
+    api_key = os.environ.get('GEMINI_API_KEY')
     if not api_key:
         return jsonify({'reply': 'Chat is not configured (missing API key).'}), 503
 
@@ -57,15 +57,14 @@ def chat():
         )
 
     try:
-        client = anthropic.Anthropic(api_key=api_key)
-        response = client.messages.create(
-            model='claude-haiku-4-5-20251001',
-            max_tokens=512,
-            system=system,
-            messages=[{'role': 'user', 'content': message}],
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel(
+            model_name='gemini-1.5-flash',
+            system_instruction=system,
         )
-        reply = response.content[0].text
-    except anthropic.APIError as e:
+        response = model.generate_content(message)
+        reply = response.text
+    except Exception as e:
         reply = f'Sorry, the assistant is temporarily unavailable. ({e})'
 
     return jsonify({'reply': reply})

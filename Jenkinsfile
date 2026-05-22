@@ -48,8 +48,8 @@ pipeline {
         stage('Deploy') {
             steps {
                 withCredentials([string(
-                    credentialsId: 'anthropic-api-key',
-                    variable: 'ANTHROPIC_API_KEY'
+                    credentialsId: 'gemini-api-key',
+                    variable: 'GEMINI_API_KEY'
                 )]) {
                     bat "docker-compose down --remove-orphans & exit /B 0"
                     bat "docker-compose up -d"
