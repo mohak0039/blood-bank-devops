@@ -48,6 +48,7 @@ pipeline {
         stage('Deploy') {
             steps {
                 bat "docker-compose down --remove-orphans & exit /B 0"
+                bat "docker rm -f bloodbank_app bloodbank_db & exit /B 0"
                 bat "docker-compose up -d"
                 bat "docker-compose ps"
                 echo "Application deployed on port 5000"
