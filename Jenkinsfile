@@ -37,7 +37,7 @@ pipeline {
                     usernameVariable: 'DOCKER_USER',
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
-                    bat "docker login -u %DOCKER_USER% -p %DOCKER_PASS%"
+                    bat "echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin"
                     bat "docker push ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
                     bat "docker push ${REGISTRY}/${IMAGE_NAME}:latest"
                 }
@@ -47,11 +47,30 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                bat "docker-compose down --remove-orphans & exit /B 0"
-                bat "docker rm -f bloodbank_app bloodbank_db & exit /B 0"
-                bat "docker-compose up -d"
-                bat "docker-compose ps"
-                echo "Application deployed on port 5000"
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub-credentials',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    ),
+                    string(credentialsId: 'bb-secret-key',     variable: 'SECRET_KEY'),
+                    string(credentialsId: 'bb-admin-username',  variable: 'ADMIN_USERNAME'),
+                    string(credentialsId: 'bb-admin-password',  variable: 'ADMIN_PASSWORD')
+                ]) {
+                    script {
+                        writeFile(
+                            file: '.env',
+                            text: "SECRET_KEY=${env.SECRET_KEY}\nADMIN_USERNAME=${env.ADMIN_USERNAME}\nADMIN_PASSWORD=${env.ADMIN_PASSWORD}\n"
+                        )
+                    }
+                    bat "echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin"
+                    bat "docker-compose down --remove-orphans"
+                    bat "docker rm -f bloodbank_app bloodbank_db & exit /B 0"
+                    bat "docker-compose pull"
+                    bat "docker-compose up -d"
+                    bat "docker-compose ps"
+                    echo "Application deployed on port 5000"
+                }
             }
         }
 

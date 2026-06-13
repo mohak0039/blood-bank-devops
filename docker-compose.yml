@@ -26,15 +26,14 @@ services:
     container_name: bloodbank_app
     ports:
       - "5000:5000"
+    env_file:
+      - .env
     environment:
       FLASK_ENV: development
       DB_HOST: db
       DB_USER: bbuser
       DB_PASSWORD: bbpassword
       DB_NAME: bloodbank
-      SECRET_KEY: change-me-in-production
-      ADMIN_USERNAME: admin
-      ADMIN_PASSWORD: bloodbank123
     depends_on:
       db:
         condition: service_healthy

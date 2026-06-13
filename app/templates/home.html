@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blood Bank MS — Saving Lives</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
@@ -27,7 +30,20 @@
                     </a>
                 </li>
 
-                {% if session.get('user_id') %}
+                {% if session.get('admin_logged_in') %}
+                <li class="nav-item ms-1">
+                    <div class="dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="bi bi-shield-check"></i> {{ session.admin_username }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" style="color:#C62828" href="{{ url_for('auth.logout') }}">
+                                <i class="bi bi-box-arrow-right"></i> Sign Out
+                            </a></li>
+                        </ul>
+                    </div>
+                </li>
+                {% elif session.get('user_id') %}
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('requests.list_requests') }}">
                         <i class="bi bi-clipboard2-pulse-fill"></i> My Requests
@@ -39,13 +55,13 @@
                             <i class="bi bi-person-circle"></i> {{ session.user_name }}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}">
+                            <li><a class="dropdown-item" style="color:#C62828" href="{{ url_for('auth.logout') }}">
                                 <i class="bi bi-box-arrow-right"></i> Sign Out
                             </a></li>
                         </ul>
                     </div>
                 </li>
-                {% elif not session.get('admin_logged_in') %}
+                {% else %}
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('auth.login') }}">
                         <i class="bi bi-box-arrow-in-right"></i> Sign In
@@ -55,21 +71,6 @@
                     <a href="{{ url_for('auth.register') }}" class="btn btn-outline-light btn-sm ms-1 px-3">
                         <i class="bi bi-person-plus"></i> Register
                     </a>
-                </li>
-                {% endif %}
-
-                {% if session.get('admin_logged_in') %}
-                <li class="nav-item ms-2">
-                    <div class="dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                            <i class="bi bi-shield-check"></i> {{ session.admin_username }}
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item text-danger" href="{{ url_for('auth.admin_logout') }}">
-                                <i class="bi bi-box-arrow-right"></i> Admin Logout
-                            </a></li>
-                        </ul>
-                    </div>
                 </li>
                 {% endif %}
             </ul>
@@ -96,7 +97,7 @@
     <!-- Wave divider -->
     <div class="home-hero-wave">
         <svg viewBox="0 0 1440 70" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M0,35 C240,70 480,0 720,35 C960,70 1200,0 1440,35 L1440,70 L0,70 Z" fill="#f0f2f5"/>
+            <path d="M0,35 C240,70 480,0 720,35 C960,70 1200,0 1440,35 L1440,70 L0,70 Z" fill="#FDF9F9"/>
         </svg>
     </div>
     <div class="container position-relative">
@@ -145,7 +146,7 @@
 </section>
 
 <!-- Feature Cards -->
-<section class="home-features">
+<section class="home-features" id="features">
     <div class="container">
         <div class="text-center mb-5">
             <h2 class="home-section-title">Everything You Need</h2>
@@ -154,29 +155,29 @@
         <div class="row g-4">
             <div class="col-md-4">
                 <div class="home-feat-card">
-                    <div class="home-feat-icon" style="background:#fdecea;color:var(--red)">
+                    <div class="home-feat-icon" style="background:var(--primary-bg);color:var(--primary)">
                         <i class="bi bi-people-fill"></i>
                     </div>
                     <h5>Donor Management</h5>
-                    <p class="text-muted">Register donors, track donation history, and auto-check eligibility with the 90-day rule.</p>
+                    <p>Register donors, track donation history, and auto-check eligibility with the 90-day rule.</p>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="home-feat-card">
-                    <div class="home-feat-icon" style="background:#e8f5e9;color:#2e7d32">
+                    <div class="home-feat-icon" style="background:var(--green-bg);color:var(--green)">
                         <i class="bi bi-droplet-half"></i>
                     </div>
                     <h5>Live Blood Inventory</h5>
-                    <p class="text-muted">Monitor all 8 blood types in real time. Get instant low-stock alerts before critical shortages hit.</p>
+                    <p>Monitor all 8 blood types in real time. Get instant low-stock alerts before critical shortages hit.</p>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="home-feat-card">
-                    <div class="home-feat-icon" style="background:#fff8e1;color:#f57f17">
+                    <div class="home-feat-icon" style="background:var(--amber-bg);color:var(--amber)">
                         <i class="bi bi-clipboard2-pulse-fill"></i>
                     </div>
                     <h5>Emergency Requests</h5>
-                    <p class="text-muted">Submit and track blood requests with urgency tiers — Normal, Urgent, or Critical.</p>
+                    <p>Submit and track blood requests with urgency tiers — Normal, Urgent, or Critical.</p>
                 </div>
             </div>
         </div>
@@ -184,7 +185,7 @@
 </section>
 
 <!-- How It Works -->
-<section class="home-steps">
+<section class="home-steps" id="how-it-works">
     <div class="container">
         <div class="text-center mb-5">
             <h2 class="home-section-title">How It Works</h2>
@@ -233,11 +234,78 @@
 </section>
 
 <!-- Footer -->
-<footer class="home-footer">
-    <div class="container text-center">
-        <span class="text-muted small">
-            <i class="bi bi-droplet-fill text-danger"></i> Blood Bank MS &copy; 2025 &nbsp;·&nbsp; Built with Flask &amp; Docker
-        </span>
+<footer class="home-footer-full">
+    <div class="container">
+        <div class="row g-4 py-5">
+
+            <!-- Brand column -->
+            <div class="col-lg-4 col-md-12 mb-2">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <div class="footer-brand-icon">
+                        <i class="bi bi-droplet-fill"></i>
+                    </div>
+                    <span class="footer-brand-name">BloodBank MS</span>
+                </div>
+                <p class="text-muted small mb-4" style="max-width:270px;line-height:1.65">
+                    Connecting donors, hospitals, and blood banks to save lives — every single day.
+                </p>
+                <div class="d-flex gap-2">
+                    <a href="#" class="footer-social" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+                    <a href="#" class="footer-social" aria-label="X / Twitter"><i class="bi bi-twitter-x"></i></a>
+                    <a href="#" class="footer-social" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+                </div>
+            </div>
+
+            <!-- Platform -->
+            <div class="col-6 col-md-3 col-lg-2">
+                <h6 class="footer-heading">Platform</h6>
+                <ul class="footer-links">
+                    <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                    <li><a href="{{ url_for('requests.list_requests') }}">Blood Requests</a></li>
+                    <li><a href="{{ url_for('donors.list_donors') }}">Donor Registry</a></li>
+                    <li><a href="{{ url_for('inventory.list_inventory') }}">Inventory</a></li>
+                </ul>
+            </div>
+
+            <!-- Resources -->
+            <div class="col-6 col-md-3 col-lg-2">
+                <h6 class="footer-heading">Resources</h6>
+                <ul class="footer-links">
+                    <li><a href="{{ url_for('hospitals.list_hospitals') }}">Hospitals</a></li>
+                    <li><a href="#how-it-works">How It Works</a></li>
+                    <li><a href="#features">Features</a></li>
+                </ul>
+            </div>
+
+            <!-- Account -->
+            <div class="col-6 col-md-3 col-lg-2">
+                <h6 class="footer-heading">Account</h6>
+                <ul class="footer-links">
+                    <li><a href="{{ url_for('auth.login') }}">Sign In</a></li>
+                    <li><a href="{{ url_for('auth.register') }}">Create Account</a></li>
+                    <li><a href="{{ url_for('donors.register') }}">Become a Donor</a></li>
+                </ul>
+            </div>
+
+            <!-- Legal -->
+            <div class="col-6 col-md-3 col-lg-2">
+                <h6 class="footer-heading">Legal</h6>
+                <ul class="footer-links">
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Terms of Use</a></li>
+                    <li><a href="#">Cookies</a></li>
+                </ul>
+            </div>
+
+        </div>
+
+        <!-- Bottom bar -->
+        <div class="footer-bottom">
+            <span class="text-muted small">&copy; 2025 Blood Bank MS. All rights reserved.</span>
+            <span class="text-muted small">
+                Made with <i class="bi bi-heart-fill" style="color:var(--primary);font-size:.72rem;vertical-align:middle"></i> for saving lives
+            </span>
+        </div>
     </div>
 </footer>
 

@@ -42,11 +42,13 @@
                         <td>{{ d.city or '—' }}</td>
                         <td>
                             <form method="post" action="{{ url_for('donors.approve_donor', donor_id=d.id) }}" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button type="submit" class="btn btn-success btn-sm">
                                     <i class="bi bi-check-lg"></i> Approve
                                 </button>
                             </form>
                             <form method="post" action="{{ url_for('donors.reject_donor', donor_id=d.id) }}" class="d-inline ms-1">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button type="submit" class="btn btn-outline-danger btn-sm">
                                     <i class="bi bi-x-lg"></i> Reject
                                 </button>
@@ -127,7 +129,9 @@
                 {% if session.get('admin_logged_in') %}
                 <td>
                     <form method="post" action="{{ url_for('donors.delete_donor', donor_id=d.id) }}"
-                          onsubmit="return confirm('Remove donor {{ d.name }}?')">
+                          data-donor-name="{{ d.name|e }}"
+                          onsubmit="return confirm('Remove donor ' + this.dataset.donorName + '?')">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="btn btn-outline-danger btn-sm">
                             <i class="bi bi-trash3"></i> Remove
                         </button>

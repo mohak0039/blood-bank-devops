@@ -59,11 +59,13 @@
                 <td>
                     {% if r.status == 'pending' %}
                         <form method="post" action="{{ url_for('requests.approve', request_id=r.id) }}" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn btn-sm btn-success">
                                 <i class="bi bi-check-lg"></i> Approve
                             </button>
                         </form>
                         <form method="post" action="{{ url_for('requests.reject', request_id=r.id) }}" class="d-inline ms-1">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn btn-sm btn-outline-danger">
                                 <i class="bi bi-x-lg"></i> Reject
                             </button>

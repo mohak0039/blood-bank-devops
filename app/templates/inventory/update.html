@@ -36,6 +36,7 @@
             <div class="card-header"><i class="bi bi-sliders text-danger"></i> Adjust Stock</div>
             <div class="card-body">
                 <form action="{{ url_for('inventory.update', blood_type=item.blood_type) }}" method="post">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="mb-4">
                         <label class="form-label">Action</label>
                         <div class="d-flex gap-3">

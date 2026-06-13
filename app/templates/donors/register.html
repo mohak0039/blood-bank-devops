@@ -16,6 +16,7 @@
     <div class="card-header"><i class="bi bi-person-vcard text-danger"></i> Donor Information</div>
     <div class="card-body">
         <form action="{{ url_for('donors.register') }}" method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="row g-3">
                 <div class="col-md-6">
                     <label class="form-label">Full Name <span class="text-danger">*</span></label>

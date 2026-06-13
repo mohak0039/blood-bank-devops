@@ -17,6 +17,10 @@ def list_inventory():
 @inventory_bp.route('/update/<blood_type>', methods=['GET', 'POST'])
 @login_required
 def update(blood_type):
+    if blood_type not in BLOOD_TYPES:
+        flash(f'Invalid blood type. Allowed: {", ".join(BLOOD_TYPES)}', 'danger')
+        return redirect(url_for('inventory.list_inventory'))
+
     rows = execute_query('SELECT * FROM blood_inventory WHERE blood_type = %s', (blood_type,))
     if not rows:
         flash(f'Blood type {blood_type} not found.', 'danger')
@@ -34,6 +38,12 @@ def update(blood_type):
         else:
             new_units = max(0, item['units'] - amount)
             change = -(item['units'] - new_units)
+            if abs(change) < amount:
+                flash(
+                    f'Warning: Only {abs(change)} units removed '
+                    f'(requested {amount}). Insufficient stock.',
+                    'warning',
+                )
 
         execute_query(
             'UPDATE blood_inventory SET units = %s WHERE blood_type = %s',
@@ -41,11 +51,13 @@ def update(blood_type):
             fetch=False,
         )
         execute_query(
-            'INSERT INTO inventory_history (blood_type, change_amount, units_after, reason) VALUES (%s, %s, %s, %s)',
+            'INSERT INTO inventory_history (blood_type, change_amount, units_after, reason) '
+            'VALUES (%s, %s, %s, %s)',
             (blood_type, change, new_units, 'Manual update'),
             fetch=False,
         )
-        flash(f'{blood_type} inventory updated to {new_units} units.', 'success')
+        if action == 'add' or abs(change) == amount:
+            flash(f'{blood_type} inventory updated to {new_units} units.', 'success')
         return redirect(url_for('inventory.list_inventory'))
 
     return render_template('inventory/update.html', item=item)
@@ -54,6 +66,9 @@ def update(blood_type):
 @inventory_bp.route('/history')
 def history():
     blood_type = request.args.get('blood_type', 'A+')
+    if blood_type not in BLOOD_TYPES:
+        flash(f'Invalid blood type. Allowed: {", ".join(BLOOD_TYPES)}', 'danger')
+        return redirect(url_for('inventory.list_inventory'))
     records = execute_query(
         'SELECT * FROM inventory_history WHERE blood_type = %s ORDER BY recorded_at DESC LIMIT 30',
         (blood_type,),

@@ -110,7 +110,7 @@
 <script>
 const labels = {{ inventory | map(attribute='blood_type') | list | tojson }};
 const units  = {{ inventory | map(attribute='units') | list | tojson }};
-const colors = units.map(u => u < 5 ? '#e53935' : u < 15 ? '#fb8c00' : '#43a047');
+const colors = units.map(u => u < 5 ? '#DC2626' : u < 15 ? '#D97706' : '#059669');
 
 new Chart(document.getElementById('inventoryChart'), {
     type: 'bar',

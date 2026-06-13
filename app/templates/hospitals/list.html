@@ -40,7 +40,9 @@
                 {% if session.get('admin_logged_in') %}
                 <td>
                     <form method="post" action="{{ url_for('hospitals.delete', hospital_id=h.id) }}"
-                          onsubmit="return confirm('Remove {{ h.name }}?')">
+                          data-hospital-name="{{ h.name|e }}"
+                          onsubmit="return confirm('Remove ' + this.dataset.hospitalName + '?')">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="btn btn-sm btn-outline-danger">
                             <i class="bi bi-trash3"></i>
                         </button>

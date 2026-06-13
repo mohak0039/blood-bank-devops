@@ -1,9 +1,18 @@
-from flask import Blueprint, current_app, flash, redirect, render_template, request, session, url_for
+from urllib.parse import urlparse
+
+from flask import Blueprint, flash, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from models.db import execute_query
 
 auth_bp = Blueprint('auth', __name__)
+
+
+def _is_safe_url(target):
+    if not target:
+        return False
+    parsed = urlparse(target)
+    return not parsed.netloc and not parsed.scheme
 
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
@@ -13,26 +22,17 @@ def login():
         password = request.form.get('password', '').strip()
         rows = execute_query('SELECT * FROM users WHERE email = %s', (email,))
         if rows and check_password_hash(rows[0]['password_hash'], password):
-            session['user_id'] = rows[0]['id']
-            session['user_name'] = rows[0]['name']
-            flash(f"Welcome back, {rows[0]['name']}!", 'success')
-            return redirect(request.args.get('next') or url_for('dashboard'))
+            user = rows[0]
+            session['user_id'] = user['id']
+            session['user_name'] = user['name']
+            if user.get('is_admin'):
+                session['admin_logged_in'] = True
+                session['admin_username'] = user['name']
+            flash(f"Welcome back, {user['name']}!", 'success')
+            next_url = request.args.get('next')
+            return redirect(next_url if _is_safe_url(next_url) else url_for('dashboard'))
         flash('Invalid email or password.', 'danger')
     return render_template('auth/login.html')
-
-
-@auth_bp.route('/admin-login', methods=['POST'])
-def admin_login():
-    username = request.form.get('username', '').strip()
-    password = request.form.get('password', '').strip()
-    if (username == current_app.config['ADMIN_USERNAME'] and
-            password == current_app.config['ADMIN_PASSWORD']):
-        session['admin_logged_in'] = True
-        session['admin_username'] = username
-        flash('Welcome back, Admin!', 'success')
-        return redirect(url_for('dashboard'))
-    flash('Invalid admin credentials.', 'danger')
-    return redirect(url_for('auth.login'))
 
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
@@ -78,13 +78,12 @@ def register():
 def logout():
     session.pop('user_id', None)
     session.pop('user_name', None)
+    session.pop('admin_logged_in', None)
+    session.pop('admin_username', None)
     flash('You have been signed out.', 'info')
     return redirect(url_for('home'))
 
 
 @auth_bp.route('/admin-logout')
 def admin_logout():
-    session.pop('admin_logged_in', None)
-    session.pop('admin_username', None)
-    flash('Admin logged out.', 'info')
-    return redirect(url_for('home'))
+    return redirect(url_for('auth.logout'))

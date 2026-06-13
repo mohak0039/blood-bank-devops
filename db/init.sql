@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS users (
     name          VARCHAR(100) NOT NULL,
     email         VARCHAR(100) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
+    is_admin      TINYINT(1) NOT NULL DEFAULT 0,
     created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -52,7 +53,9 @@ CREATE TABLE IF NOT EXISTS blood_requests (
     urgency        ENUM('normal', 'urgent', 'critical') DEFAULT 'normal',
     status         ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
     requested_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    resolved_at    TIMESTAMP NULL
+    resolved_at    TIMESTAMP NULL,
+    CONSTRAINT fk_request_user     FOREIGN KEY (user_id)     REFERENCES users(id)     ON DELETE SET NULL,
+    CONSTRAINT fk_request_hospital FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS inventory_history (

@@ -1,7 +1,15 @@
+import sys
+
 from flask import Flask, render_template, request, session
+from flask_wtf.csrf import CSRFProtect
+from werkzeug.security import generate_password_hash
 
 from config import config_map
 from models.db import execute_query
+
+csrf = CSRFProtect()
+
+_WEAK_ADMIN_DEFAULTS = {'admin', 'admin123', ''}
 
 
 def ensure_schema(app):
@@ -75,19 +83,72 @@ def ensure_schema(app):
                     'ALTER TABLE blood_requests ADD COLUMN user_id INT NULL',
                     fetch=False,
                 )
+
+            user_cols = execute_query('''
+                SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+                WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users'
+            ''')
+            user_col_names = [c['COLUMN_NAME'] for c in user_cols]
+            if 'is_admin' not in user_col_names:
+                execute_query(
+                    'ALTER TABLE users ADD COLUMN is_admin TINYINT(1) NOT NULL DEFAULT 0',
+                    fetch=False,
+                )
         except Exception as e:
-            app.logger.warning(f'Schema migration: {e}')
+            app.logger.error(f'Schema migration failed: {e}')
+            raise
+
+
+def ensure_admin_user(app):
+    """Create or update the admin account in the DB from environment config."""
+    if app.config.get('TESTING'):
+        return
+    admin_email = app.config.get('ADMIN_USERNAME')
+    admin_pass = app.config.get('ADMIN_PASSWORD')
+    if not admin_email or not admin_pass:
+        return
+    with app.app_context():
+        try:
+            pw_hash = generate_password_hash(admin_pass)
+            existing = execute_query('SELECT id FROM users WHERE email = %s', (admin_email,))
+            if existing:
+                execute_query(
+                    'UPDATE users SET password_hash = %s, is_admin = 1 WHERE email = %s',
+                    (pw_hash, admin_email), fetch=False,
+                )
+            else:
+                execute_query(
+                    'INSERT INTO users (name, email, password_hash, is_admin) VALUES (%s, %s, %s, 1)',
+                    ('Admin', admin_email, pw_hash), fetch=False,
+                )
+        except Exception as e:
+            app.logger.error(f'Admin user sync failed: {e}')
 
 
 def create_app(config_name='development'):
     app = Flask(__name__)
     app.config.from_object(config_map[config_name])
 
+    if config_name == 'production':
+        admin_user = app.config.get('ADMIN_USERNAME') or ''
+        admin_pass = app.config.get('ADMIN_PASSWORD') or ''
+        if not admin_user or not admin_pass or admin_user in _WEAK_ADMIN_DEFAULTS or admin_pass in _WEAK_ADMIN_DEFAULTS:
+            sys.exit(
+                'ERROR: Production requires ADMIN_USERNAME and ADMIN_PASSWORD '
+                'env vars set to strong, non-default values.'
+            )
+
+    app.config.setdefault('WTF_CSRF_ENABLED', True)
+    if app.config.get('TESTING'):
+        app.config['WTF_CSRF_ENABLED'] = False
+    csrf.init_app(app)
+
     from routes.auth import auth_bp
     from routes.donors import donors_bp
     from routes.hospitals import hospitals_bp
     from routes.inventory import inventory_bp
     from routes.requests import requests_bp
+    from utils import user_login_required
 
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(donors_bp, url_prefix='/donors')
@@ -96,12 +157,14 @@ def create_app(config_name='development'):
     app.register_blueprint(hospitals_bp, url_prefix='/hospitals')
 
     ensure_schema(app)
+    ensure_admin_user(app)
 
     @app.route('/')
     def home():
         return render_template('home.html')
 
     @app.route('/dashboard')
+    @user_login_required
     def dashboard():
         donor_count = execute_query('SELECT COUNT(*) AS cnt FROM donors')[0]['cnt']
         total_units = execute_query('SELECT COALESCE(SUM(units), 0) AS total FROM blood_inventory')[0]['total']

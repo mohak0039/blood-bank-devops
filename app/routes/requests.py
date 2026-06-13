@@ -2,7 +2,18 @@ from datetime import datetime
 
 from flask import Blueprint, flash, redirect, render_template, request, session, url_for
 
-from models.db import execute_query
+from models.db import (
+    add_inventory_history,
+    approve_blood_request,
+    create_blood_request,
+    get_all_blood_requests,
+    get_blood_inventory_by_type,
+    get_blood_request_by_id,
+    get_hospitals_list,
+    get_user_blood_requests,
+    reject_blood_request,
+    update_blood_units,
+)
 from utils import login_required, user_login_required
 
 requests_bp = Blueprint('requests', __name__)
@@ -13,21 +24,17 @@ BLOOD_TYPES = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
 @requests_bp.route('/')
 @user_login_required
 def list_requests():
-    user_id = session.get('user_id')
-    if session.get('admin_logged_in') or not user_id:
-        blood_requests = execute_query('SELECT * FROM blood_requests ORDER BY requested_at DESC')
+    if session.get('admin_logged_in'):
+        blood_requests = get_all_blood_requests()
     else:
-        blood_requests = execute_query(
-            'SELECT * FROM blood_requests WHERE user_id = %s ORDER BY requested_at DESC',
-            (user_id,),
-        )
+        blood_requests = get_user_blood_requests(session.get('user_id'))
     return render_template('requests/list.html', blood_requests=blood_requests)
 
 
 @requests_bp.route('/new', methods=['GET', 'POST'])
 @user_login_required
 def new_request():
-    hospitals = execute_query('SELECT id, name FROM hospitals ORDER BY name')
+    hospitals = get_hospitals_list()
 
     if request.method == 'POST':
         patient_name = request.form.get('patient_name', '').strip()
@@ -42,14 +49,9 @@ def new_request():
             flash('Patient name, blood type, units, and phone are required.', 'danger')
             return render_template('requests/new.html', blood_types=BLOOD_TYPES, hospitals=hospitals), 400
 
-        execute_query(
-            '''INSERT INTO blood_requests
-               (user_id, patient_name, blood_type, units_required, hospital, hospital_id,
-                contact_phone, urgency)
-               VALUES (%s, %s, %s, %s, %s, %s, %s, %s)''',
-            (session.get('user_id'), patient_name, blood_type, int(units_required),
-             hospital or None, hospital_id, contact_phone, urgency),
-            fetch=False,
+        create_blood_request(
+            session.get('user_id'), patient_name, blood_type, int(units_required),
+            hospital or None, hospital_id, contact_phone, urgency,
         )
         flash(f'Blood request for {patient_name} submitted!', 'success')
         return redirect(url_for('requests.list_requests'))
@@ -60,32 +62,23 @@ def new_request():
 @requests_bp.route('/approve/<int:request_id>', methods=['POST'])
 @login_required
 def approve(request_id):
-    rows = execute_query('SELECT * FROM blood_requests WHERE id = %s', (request_id,))
-    if not rows:
+    req = get_blood_request_by_id(request_id)
+    if not req:
         flash('Request not found.', 'danger')
         return redirect(url_for('requests.list_requests'))
 
-    req = rows[0]
-    inventory = execute_query('SELECT * FROM blood_inventory WHERE blood_type = %s', (req['blood_type'],))
-
-    if not inventory or inventory[0]['units'] < req['units_required']:
+    item = get_blood_inventory_by_type(req['blood_type'])
+    if not item or item['units'] < req['units_required']:
         flash(f'Insufficient {req["blood_type"]} units in inventory.', 'danger')
         return redirect(url_for('requests.list_requests'))
 
-    new_units = inventory[0]['units'] - req['units_required']
-    execute_query(
-        'UPDATE blood_inventory SET units = %s WHERE blood_type = %s',
-        (new_units, req['blood_type']), fetch=False,
+    new_units = item['units'] - req['units_required']
+    update_blood_units(req['blood_type'], new_units)
+    add_inventory_history(
+        req['blood_type'], -req['units_required'], new_units,
+        f'Request #{request_id} approved',
     )
-    execute_query(
-        'INSERT INTO inventory_history (blood_type, change_amount, units_after, reason) VALUES (%s, %s, %s, %s)',
-        (req['blood_type'], -req['units_required'], new_units, f'Request #{request_id} approved'),
-        fetch=False,
-    )
-    execute_query(
-        "UPDATE blood_requests SET status='approved', resolved_at=%s WHERE id=%s",
-        (datetime.now(), request_id), fetch=False,
-    )
+    approve_blood_request(request_id, datetime.now())
     flash(f'Request #{request_id} approved. Inventory updated.', 'success')
     return redirect(url_for('requests.list_requests'))
 
@@ -93,9 +86,6 @@ def approve(request_id):
 @requests_bp.route('/reject/<int:request_id>', methods=['POST'])
 @login_required
 def reject(request_id):
-    execute_query(
-        "UPDATE blood_requests SET status='rejected', resolved_at=%s WHERE id=%s",
-        (datetime.now(), request_id), fetch=False,
-    )
+    reject_blood_request(request_id, datetime.now())
     flash(f'Request #{request_id} rejected.', 'warning')
     return redirect(url_for('requests.list_requests'))

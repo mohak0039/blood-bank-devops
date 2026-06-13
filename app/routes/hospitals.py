@@ -1,6 +1,6 @@
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, current_app, flash, redirect, render_template, request, url_for
 
-from models.db import execute_query
+from models.db import create_hospital, delete_hospital, get_all_hospitals
 from utils import login_required
 
 hospitals_bp = Blueprint('hospitals', __name__)
@@ -8,7 +8,7 @@ hospitals_bp = Blueprint('hospitals', __name__)
 
 @hospitals_bp.route('/')
 def list_hospitals():
-    hospitals = execute_query('SELECT * FROM hospitals ORDER BY name')
+    hospitals = get_all_hospitals()
     return render_template('hospitals/list.html', hospitals=hospitals)
 
 
@@ -26,12 +26,14 @@ def register():
             flash('Hospital name and phone are required.', 'danger')
             return render_template('hospitals/register.html'), 400
 
-        execute_query(
-            'INSERT INTO hospitals (name, address, phone, email, city) VALUES (%s, %s, %s, %s, %s)',
-            (name, address or None, phone, email or None, city or None),
-            fetch=False,
-        )
-        flash(f'Hospital "{name}" registered successfully!', 'success')
+        try:
+            create_hospital(name, address, phone, email, city)
+            flash(f'Hospital "{name}" registered successfully!', 'success')
+        except Exception as e:
+            current_app.logger.error(f'Failed to register hospital: {e}')
+            flash('Failed to register hospital. Please try again.', 'danger')
+            return render_template('hospitals/register.html'), 500
+
         return redirect(url_for('hospitals.list_hospitals'))
 
     return render_template('hospitals/register.html')
@@ -40,6 +42,8 @@ def register():
 @hospitals_bp.route('/delete/<int:hospital_id>', methods=['POST'])
 @login_required
 def delete(hospital_id):
-    execute_query('DELETE FROM hospitals WHERE id = %s', (hospital_id,), fetch=False)
+    if not delete_hospital(hospital_id):
+        flash('Hospital not found.', 'danger')
+        return redirect(url_for('hospitals.list_hospitals'))
     flash('Hospital removed.', 'info')
     return redirect(url_for('hospitals.list_hospitals'))
