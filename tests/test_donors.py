@@ -9,7 +9,7 @@ SAMPLE_DONOR = {
 
 
 def test_donor_list_page_loads(client, mocker):
-    mocker.patch('routes.donors.execute_query', return_value=[SAMPLE_DONOR])
+    mocker.patch('routes.donors.get_approved_donors', return_value=[SAMPLE_DONOR])
     response = client.get('/donors/')
     assert response.status_code == 200
     assert b'Rahul Singh' in response.data
